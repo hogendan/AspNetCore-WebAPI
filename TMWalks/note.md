@@ -20,3 +20,8 @@
 ## Swagger
 
 Swagger is a popular tool for docmenting APIs and prividing a user friendly interface for testing and exploring the APIs.
+
+## パッケージの追加
+
+`dotnet add package [パッケージ名]`
+e.g. dotnet add package Microsoft.EntityFrameworkCore.SqlServer -v 7.0.0
