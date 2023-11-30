@@ -24,7 +24,8 @@ Swagger is a popular tool for docmenting APIs and prividing a user friendly inte
 ## パッケージの追加
 
 `dotnet add package [パッケージ名]`
-e.g. dotnet add package Microsoft.EntityFrameworkCore.SqlServer -v 7.0.0
+
+- e.g. dotnet add package Microsoft.EntityFrameworkCore.SqlServer -v 7.0.0
 
 ## Microsoft.EntityFrameworkCore.Tools
 
@@ -76,3 +77,36 @@ Package manager コンソールから以下を実行する
       1. ConnectionString を以下のように変更して解決
          1. "Server=localhost;Database=TMWalksDb;TrustServerCertificate=True;User ID=sa;Password=Password.1"
 
+## Controller クラスの属性について
+
+### ApiController
+
+ApiController atribute will tell this application that this controller is for API use.  
+こういうの↓
+
+``` c#
+[ApiController]
+public class RegionsController : ControllerBase
+{
+}
+```
+
+### Route
+
+The Route attribute is basically defining the route whenever a user enters this route along with the application URL, it will be pointed to the region's controller.  
+例：<https://localhost:1234/api/regions>
+
+``` c#
+[Route("api/[controller]")]
+public class RegionsController : ControllerBase
+{
+}
+```
+
+## DTOs
+
+Data Transfer Objects
+
+- Userd to transfer data between different layers
+- Typically contain a subset of the properties in the domain model
+- For example transferring data over a network
