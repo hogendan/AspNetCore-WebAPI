@@ -110,3 +110,18 @@ Data Transfer Objects
 - Userd to transfer data between different layers
 - Typically contain a subset of the properties in the domain model
 - For example transferring data over a network
+
+### DTOs vs Domain Models
+
+Entityframework core domain models hava a mapping between the tables in the database and the domain models that are used internally in the application.  
+When you use entity framework to talk to a table, it gives us the domain model because the DbContext class only knows about the domain models, but because we have the domain models within the API, it is a good practice to add a layer of DTOs.  
+That is the data transfer objects and that is what we send back to the client.  
+So we never send the domain model back to the client, but we send the DTO instead.  
+
+### Advantages Of DTOs
+
+- Separation of Concerns
+  - DTOs can be designed to match the business requirements.
+- Performance
+- Security
+- Versioning
