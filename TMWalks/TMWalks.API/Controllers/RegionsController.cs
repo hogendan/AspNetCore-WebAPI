@@ -88,4 +88,58 @@ public class RegionsController : ControllerBase
 
         return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, regionDto);
     }
+
+    // Update region
+    // PUT: https://localhost:portnumber/api/regions/{id}
+    [HttpPut]
+    [Route("{id:Guid}")]
+    public IActionResult Update([FromRoute] Guid id, [FromBody] UpdateRetionRequesstDto updateRetionRequesstDto) {
+        // Check if region exists
+        var regionDomainModel = dbContext.Regions.FirstOrDefault(x => x.Id == id);
+
+        if (regionDomainModel == null) {
+            return NotFound();
+        }
+
+        // Map DTOto Domain model
+        regionDomainModel.Code = updateRetionRequesstDto.Code;
+        regionDomainModel.Name = updateRetionRequesstDto.Name;
+        regionDomainModel.RegionImageUrl = updateRetionRequesstDto.RegionImageUrl;
+        
+        dbContext.SaveChanges();
+
+        // Convert Domain Model to DTO
+        var regionDto = new RegionDto {
+            Id = regionDomainModel.Id,
+            Code = regionDomainModel.Code,
+            Name = regionDomainModel.Name,
+            RegionImageUrl = regionDomainModel.RegionImageUrl,
+        };
+
+        return Ok(regionDto);
+    }
+
+    // Delete region
+    // DELETE: https://localhost:portnumber/api/region/{id}
+    [HttpDelete]
+    [Route("{id:Guid}")]
+    public IActionResult Delete([FromRoute]Guid id) {
+        var regionDomainModel = dbContext.Regions.FirstOrDefault(x => x.Id == id);
+
+        if (regionDomainModel == null) {
+            return NotFound();
+        }
+
+        dbContext.Regions.Remove(regionDomainModel);
+        dbContext.SaveChanges();
+
+        var regionDto = new RegionDto {
+            Id = regionDomainModel.Id,
+            Code = regionDomainModel.Code,
+            Name = regionDomainModel.Name,
+            RegionImageUrl = regionDomainModel.RegionImageUrl,
+        };
+
+        return Ok(regionDto);
+    }
 }
