@@ -1,5 +1,7 @@
 # メモ
 
+---
+
 ## VS Code の環境構築
 
 [チュートリアル](https://learn.microsoft.com/ja-jp/aspnet/core/tutorials/first-web-api?view=aspnetcore-7.0&tabs=visual-studio-code)
@@ -12,14 +14,20 @@
 
 `dotnet sln add <プロジェクトパス>`
 
+---
+
 ## VS Code でAPIをテスト実行する
 
 - `dotnet run --launch-profile https`
 - 上記を実行後に、<https://localhost:portnumber/swagger>
 
+---
+
 ## Swagger
 
 Swagger is a popular tool for docmenting APIs and prividing a user friendly interface for testing and exploring the APIs.
+
+---
 
 ## パッケージの追加
 
@@ -27,9 +35,13 @@ Swagger is a popular tool for docmenting APIs and prividing a user friendly inte
 
 - e.g. dotnet add package Microsoft.EntityFrameworkCore.SqlServer -v 7.0.0
 
+---
+
 ## Microsoft.EntityFrameworkCore.Tools
 
 This is the package that is responsible to run migrations, which will later on create a database for us.
+
+---
 
 ## DbContext Class
 
@@ -44,6 +56,8 @@ So we can say that the Dbcontext class is a bridge between your domain model cla
 
 Controller <--> DbContext <--> Database
 
+---
+
 ## Mac で Sqlserver は Docker にインストールする必要がある
 
 - イメージのダウンロード
@@ -51,9 +65,13 @@ Controller <--> DbContext <--> Database
 - コンテナの起動
   - `docker run --cap-add SYS_PTRACE -e 'ACCEPT_EULA=1' -e 'MSSQL_SA_PASSWORD=Password.1' -p 1433:1433 --name azuresqledge -d mcr.microsoft.com/azure-sql-edge`
 
+---
+
 ## SqlServer の Docker-Compose を作成して、git にあげた
 
 [github](https://github.com/hogendan/Docker-SqlServer)
+
+---
 
 ## Run EF Core Migration
 
@@ -76,6 +94,8 @@ Package manager コンソールから以下を実行する
    1. ここで色々エラーが出て1つずつ潰していった
       1. ConnectionString を以下のように変更して解決
          1. "Server=localhost;Database=TMWalksDb;TrustServerCertificate=True;User ID=sa;Password=Password.1"
+
+---
 
 ## Controller クラスの属性について
 
@@ -103,6 +123,8 @@ public class RegionsController : ControllerBase
 }
 ```
 
+---
+
 ## DTOs
 
 Data Transfer Objects
@@ -125,3 +147,25 @@ So we never send the domain model back to the client, but we send the DTO instea
 - Performance
 - Security
 - Versioning
+
+---
+
+## Repository Pattern
+
+- Desing pattern to separate the data access layer from the application
+- Provides interface without exposing implementation
+- Helps create abstraction
+
+The Repository class is responsible for performing CRUD operations.
+
+### Benefits
+
+- Decoupling
+  - That is decoupling the data access layer from the rest of the application, which makes it easier to maintain and test the application.
+- Consistency
+  - Providing a standard interface for accessing data which improves the consistency and readability of the code. Now every connection to the database goes through the repository.
+- Performance
+- Multiple data source (switchng)
+  - We can also improve the performance ot the application by using caching, batching or other optimization techniques supporting multiple data sources, which allows the application to switch between different data sources without affecting the application logic.
+
+
