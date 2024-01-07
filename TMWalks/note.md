@@ -168,4 +168,8 @@ The Repository class is responsible for performing CRUD operations.
 - Multiple data source (switchng)
   - We can also improve the performance ot the application by using caching, batching or other optimization techniques supporting multiple data sources, which allows the application to switch between different data sources without affecting the application logic.
 
+## Automapper
 
+DomainModel と DTO のマッピングをしてくれるライブラリ
+
+`dotnet add package Automapper.Extensions.Microsoft.DependencyInjection`
