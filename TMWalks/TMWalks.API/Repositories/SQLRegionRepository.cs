@@ -20,7 +20,7 @@ public class SQLRegionRepository : IRegionRepository
 
     public async Task<Region?> DeleteAsync(Guid id)
     {
-        var existingRegion = await dbContext.Regions.FirstOrDefaultAsync();
+        var existingRegion = await dbContext.Regions.FirstOrDefaultAsync(x => x.Id == id);
 
         if (existingRegion == null) {
             return null;

@@ -1,6 +1,8 @@
 ﻿using System.Net.Sockets;
+using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Migrations.Operations;
 using TMWalks.API.Repositories;
 
 namespace TMWalks.API;
@@ -11,11 +13,13 @@ public class RegionsController : ControllerBase
 {
     private readonly TMWalksDbContext dbContext;
     private readonly IRegionRepository regionRepository;
+    private readonly IMapper mapper;
 
-    public RegionsController(TMWalksDbContext dbContext, IRegionRepository regionRepository)
+    public RegionsController(TMWalksDbContext dbContext, IRegionRepository regionRepository, IMapper mapper)
     {
         this.dbContext = dbContext;
         this.regionRepository = regionRepository;
+        this.mapper = mapper;
     }
 
     // GET ALL REGIONS
@@ -24,20 +28,9 @@ public class RegionsController : ControllerBase
     public async Task<IActionResult> GetAll() {
         // Get Data From Database - Domain models
         var regionsDomain = await regionRepository.GetAllAsync();
-        
-        // Map Domain Models to DTOs
-         var regionsDto = new List<RegionDto>();
-         foreach(var regionDomain in regionsDomain) {
-            regionsDto.Add(new RegionDto {
-                Id = regionDomain.Id,
-                Code = regionDomain.Code,
-                Name = regionDomain.Name,
-                RegionImageUrl = regionDomain.RegionImageUrl,
-            });
-         }
 
         // Return DTOs
-        return Ok(regionsDto);
+        return Ok(mapper.Map<List<RegionDto>>(regionsDomain));
     }
 
     // GET SINGLE REGION (Get Region By ID)
@@ -55,16 +48,8 @@ public class RegionsController : ControllerBase
             return NotFound();
         }
 
-        // Map/Converter Region Domain Model to Region DTO
-        var regionDto = new RegionDto {
-                Id = regionDomain.Id,
-                Code = regionDomain.Code,
-                Name = regionDomain.Name,
-                RegionImageUrl = regionDomain.RegionImageUrl,
-        };
-
         // Return DTO back to client
-        return Ok(regionDto);
+        return Ok(mapper.Map<RegionDto>(regionDomain));
     }
 
     // POST To Create New Region
@@ -72,22 +57,13 @@ public class RegionsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] AddRegionRequestDto addRegionRequestDto) {
         // Map or Convert DTO to Domain Model
-        var regionDomainModel = new Region {
-            Code = addRegionRequestDto.Code,
-            Name = addRegionRequestDto.Name,
-            RegionImageUrl = addRegionRequestDto.RegionImageUrl,
-        };
+        var regionDomainModel = mapper.Map<Region>(addRegionRequestDto);
 
         // Use Domain Model to create Region
         regionDomainModel = await regionRepository.CreateAsync(regionDomainModel);
 
         // Map Domain model back to DTO
-        var regionDto = new RegionDto {
-            Id = regionDomainModel.Id,
-            Code = regionDomainModel.Code,
-            Name = regionDomainModel.Name,
-            RegionImageUrl = regionDomainModel.RegionImageUrl,
-        };
+        var regionDto = mapper.Map<RegionDto>(regionDomainModel);
 
         return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, regionDto);
     }
@@ -98,11 +74,7 @@ public class RegionsController : ControllerBase
     [Route("{id:Guid}")]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateRetionRequesstDto updateRetionRequesstDto) {
         // Map DTO to Domain Model
-        var regionDomainModel = new Region {
-            Code = updateRetionRequesstDto.Code,
-            Name = updateRetionRequesstDto.Name,
-            RegionImageUrl = updateRetionRequesstDto.RegionImageUrl,
-        };
+        var regionDomainModel = mapper.Map<Region>(updateRetionRequesstDto);
 
         regionDomainModel = await regionRepository.UpdateAsync(id, regionDomainModel);
 
@@ -111,12 +83,7 @@ public class RegionsController : ControllerBase
         }
 
         // Convert Domain Model to DTO
-        var regionDto = new RegionDto {
-            Id = regionDomainModel.Id,
-            Code = regionDomainModel.Code,
-            Name = regionDomainModel.Name,
-            RegionImageUrl = regionDomainModel.RegionImageUrl,
-        };
+        var regionDto = mapper.Map<RegionDto>(regionDomainModel);
 
         return Ok(regionDto);
     }
@@ -132,12 +99,7 @@ public class RegionsController : ControllerBase
             return NotFound();
         }
 
-        var regionDto = new RegionDto {
-            Id = regionDomainModel.Id,
-            Code = regionDomainModel.Code,
-            Name = regionDomainModel.Name,
-            RegionImageUrl = regionDomainModel.RegionImageUrl,
-        };
+        var regionDto = mapper.Map<RegionDto>(regionDomainModel);
 
         return Ok(regionDto);
     }
