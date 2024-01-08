@@ -1,4 +1,4 @@
-﻿ namespace TMWalks.API;
+﻿namespace TMWalks.API;
 
 public class RegionDto
 {
