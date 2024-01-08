@@ -173,3 +173,29 @@ The Repository class is responsible for performing CRUD operations.
 DomainModel と DTO のマッピングをしてくれるライブラリ
 
 `dotnet add package Automapper.Extensions.Microsoft.DependencyInjection`
+
+## EF を使用してテストデータを作成する方法
+
+1. DbContext クラスに以下のメソッドを追加する。
+
+``` c#
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        // Seed data for Difficulities
+        var difficulties = new List<Difficulty> {
+            new Difficulty {
+                Id = Guid.NewGuid(),
+                Name = "Easy"
+            },
+        };
+        // Seed difficulties to the database
+        modelBuilder.Entity<Difficulty>().HasData(difficulties);
+    }
+
+```
+
+2. VS Code の TERMINAL から以下のコマンドを実行する
+   1. `dotnet ef migrations add "Seeding data for Difficulties and Regions"`
+   2. `otnet ef database update`
