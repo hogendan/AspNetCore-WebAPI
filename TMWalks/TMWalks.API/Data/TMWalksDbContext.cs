@@ -4,7 +4,7 @@ namespace TMWalks.API;
 
 public class TMWalksDbContext : DbContext
 {
-    public TMWalksDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
+    public TMWalksDbContext(DbContextOptions<TMWalksDbContext> dbContextOptions) : base(dbContextOptions)
     {
 
     }

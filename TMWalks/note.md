@@ -389,3 +389,114 @@ URLパラメータからカラム名、フィルタ内容を取得する方法
         return await walks.Skip(skipResults).Take(pageSize).ToListAsync();
     }
 ```
+
+## Authentication & Authorization
+
+### Authentication
+
+- The process to determine a user's Identity
+- Username and Password
+- By using authentication, we check if we trust the user
+
+### Authorization
+
+- User permission
+- Roles, Policies, Claims
+- Check if User has ReadOnly or ReadWrite Role
+
+## JWT (JSON Web Tokens)
+
+1. User が website にアクセス
+2. ユーザー名とパスワードをAPIサーバーへ送る
+3. APIは JWT Token を返す
+4. ユーザーは JWT Token を使ってAPIを呼び出す
+
+### Nuget から JWT ライブラリをインストール
+
+`dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer`
+`dotnet add package Microsoft.IdentityModel.Tokens`
+`dotnet add package System.IdentityModel.Tokens.Jwt`
+`dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore`
+
+## Setting Up Auth Database
+
+- Create New Connection String
+- Create New DbContext with Roles (Seed Data)
+- Inject DbContext and Idetity (ASP.NET Core Identity)
+- Run EF Core Migrations
+
+## コード側対応
+
+Auth用ConnectionString, Jwt設定を追加
+
+``` json appsetting.json
+  "ConnectionStrings": {
+    "TMWalksConnectionString": "Server=localhost;Database=TMWalksDb;TrustServerCertificate=True;User ID=sa;Password=Password.1",
+    "TMWalksAuthConnectionString": "Server=localhost;Database=TMWalkAuthDb;TrustServerCertificate=True;User ID=sa;Password=Password.1"
+  },
+  "Jwt": {
+    "Key": "bbusouJSGGededff879879HHgstKOREHATEKITOU",
+    "Issuer": "https://localhost:7017",
+    "Audience": "https://localhost:7017"
+  }
+
+```
+
+Auth用DbContext の Inject 追加, Jwt の Inject 追加
+
+``` c# Program.cs
+builder.Services.AddDbContext<TMWalksAuthDbContext>(options => 
+    options.UseSqlServer(builder.Configuration.GetConnectionString("TMWalksAuthConnectionString"))
+);
+
+// 省略
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options => 
+    options.TokenValidationParameters = new Microsoft.IdentityModel.Tokens.TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidateAudience = true,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+    });
+
+// 省略
+
+app.UseAuthentication();
+app.UseAuthorization();
+
+```
+
+Authされていないリクエストを弾くように コントローラー修正
+
+``` c# Contoller
+[Route("api/[controller]")]
+[ApiController]
+[Authorize]
+public class RegionsController : ControllerBase
+{
+  // 省略
+}
+```
+
+Auth用DbContextクラス追加
+
+``` c#
+public class TMWalksAuthDbContext : IdentityDbContext
+{
+    public TMWalksAuthDbContext(DbContextOptions<TMWalksAuthDbContext> options) : base(options)
+    {
+    }
+}
+
+// 元々のDbContextと共存させるためにはGeneric(DbContextOptions<TMWalksDbContext>)にしないと実行時エラーになる
+public TMWalksDbContext(DbContextOptions<TMWalksDbContext> dbContextOptions) : base(dbContextOptions)
+{
+
+}
+
+```
