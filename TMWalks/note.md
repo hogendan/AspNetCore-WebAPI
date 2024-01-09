@@ -259,3 +259,133 @@ public class ValidateModelAttribute : ActionFilterAttribute
         // 省略 
     }
 ```
+
+## Filtering
+
+URLパラメータからカラム名、フィルタ内容を取得する方法
+
+- Actionメソッド
+  - filterOn にフィルターするカラム名を指定
+  - filterQuery にフィルタする値を指定
+
+``` c#
+    // GET Walks
+    // GET: /api/walks?filterOn=Name&filterQuery=Track
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] string? filterOn, [FromQuery] string? filterQuery)
+    {
+        var walks = await walkRepository.GetAllAsync(filterOn, filterQuery);
+
+        return Ok(mapper.Map<List<WalkDto>>(walks));
+    }
+```
+
+- Repository メソッド
+  - カラム分 if 文が増えるのがいけてない気がするが。。。
+    - 使う側からしたら使いやすいか。WebAPIなのでfilterOnに指定できる名称などの仕様書が公開するはずだし。
+  - あと複数カラムの場合はどうするのか。
+
+``` c#
+    public async Task<List<Walk>> GetAllAsync(string? filterOn = null, string? filterQuery = null)
+    {
+        var walks = dbContext.Walks.Include("Region").Include("Difficulty").AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(filterOn) && !string.IsNullOrWhiteSpace(filterQuery))
+        {
+            if (filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
+            {
+                walks = walks.Where(x => x.Name.Contains(filterQuery));
+            }
+        }
+
+        return await walks.ToListAsync();
+    }
+``` 
+
+## Soring
+
+``` c# Controller
+    // GET Walks
+    // GET: /api/walks?filterOn=Name&filterQuery=Track&isAscending=true
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] string? filterOn,
+                                            [FromQuery] string? filterQuery,
+                                            [FromQuery] string? sortBy,
+                                            [FromQuery] bool? isAscending)
+    {
+        var walks = await walkRepository.GetAllAsync(filterOn, filterQuery,sortBy,isAscending ?? true);
+
+        return Ok(mapper.Map<List<WalkDto>>(walks));
+    }
+```
+
+``` c# Repository
+    public async Task<List<Walk>> GetAllAsync(string? filterOn = null,
+                                              string? filterQuery = null,
+                                              string? sortBy = null,
+                                              bool isAcsending = true)
+    {
+        var walks = dbContext.Walks.Include("Region").Include("Difficulty").AsQueryable();
+
+        // Filtering
+        if (!string.IsNullOrWhiteSpace(filterOn) && !string.IsNullOrWhiteSpace(filterQuery))
+        {
+            if (filterOn.Equals("Name", StringComparison.OrdinalIgnoreCase))
+            {
+                walks = walks.Where(x => x.Name.Contains(filterQuery));
+            }
+        }
+
+        // Sorting
+        if (!string.IsNullOrWhiteSpace(sortBy))
+        {
+            if (sortBy.Equals("Name", StringComparison.OrdinalIgnoreCase))
+            {
+                walks = isAcsending ? walks.OrderBy(x => x.Name) : walks.OrderByDescending(x => x.Name);
+            }
+            else if (sortBy.Equals("Length", StringComparison.OrdinalIgnoreCase)) {
+                walks = isAcsending ? walks.OrderBy(x => x.LengthInKmj) :walks.OrderByDescending(x => x.LengthInKmj);
+            }
+        }
+
+        return await walks.ToListAsync();
+    }
+```
+
+## Pagination
+
+``` c# Controller
+    // GET Walks
+    // GET: /api/walks?filterOn=Name&filterQuery=Track&isAscending=true&pageNumber=1&pageSize=10
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] string? filterOn,
+                                            [FromQuery] string? filterQuery,
+                                            [FromQuery] string? sortBy,
+                                            [FromQuery] bool? isAscending,
+                                            [FromQuery] int pageNumber= 1,
+                                            [FromQuery] int pageSize = 1000)
+    {
+        var walks = await walkRepository.GetAllAsync(filterOn, filterQuery,sortBy,isAscending ?? true, pageNumber, pageSize);
+
+        return Ok(mapper.Map<List<WalkDto>>(walks));
+    }
+```
+
+``` c# Repository
+    public async Task<List<Walk>> GetAllAsync(string? filterOn = null,
+                                              string? filterQuery = null,
+                                              string? sortBy = null,
+                                              bool isAcsending = true,
+                                              int pageNumber = 1,
+                                              int pageSize = 1000)
+    {
+        var walks = dbContext.Walks.Include("Region").Include("Difficulty").AsQueryable();
+
+        // 省略
+
+        // Pagination
+        var skipResults = (pageNumber - 1) * pageSize;
+
+        return await walks.Skip(skipResults).Take(pageSize).ToListAsync();
+    }
+```
