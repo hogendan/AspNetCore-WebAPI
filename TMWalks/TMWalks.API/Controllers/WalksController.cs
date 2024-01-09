@@ -20,19 +20,15 @@ namespace TMWalks.API
         // CREATE Wakl
         // POST: /api/walks
         [HttpPost]
+        [ValidateModel]
         public async Task<IActionResult> Create([FromBody] AddWalkRequestDto addWalkRequestDto)
         {
-            if (ModelState.IsValid)
-            {
-                // Map DTO to Domain Model
-                var walkDomainModel = mapper.Map<Walk>(addWalkRequestDto);
-                await walkRepository.CreateAsync(walkDomainModel);
+            // Map DTO to Domain Model
+            var walkDomainModel = mapper.Map<Walk>(addWalkRequestDto);
+            await walkRepository.CreateAsync(walkDomainModel);
 
-                // Map Domain model to DTO
-                return Ok(mapper.Map<WalkDto>(walkDomainModel));
-            }
-
-            return BadRequest(ModelState);
+            // Map Domain model to DTO
+            return Ok(mapper.Map<WalkDto>(walkDomainModel));
         }
 
         // GET Walks
@@ -64,22 +60,18 @@ namespace TMWalks.API
         // PUT: /api/walks/{id}
         [HttpPut]
         [Route("{id:Guid}")]
+        [ValidateModel]
         public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateWalkRequestDto walkDto)
         {
-            if (ModelState.IsValid)
+            var walkDomainModel = mapper.Map<Walk>(walkDto);
+            walkDomainModel = await walkRepository.UpdateAsync(id, walkDomainModel);
+
+            if (walkDomainModel == null)
             {
-                var walkDomainModel = mapper.Map<Walk>(walkDto);
-                walkDomainModel = await walkRepository.UpdateAsync(id, walkDomainModel);
-
-                if (walkDomainModel == null)
-                {
-                    return NotFound();
-                }
-
-                return Ok(mapper.Map<WalkDto>(walkDomainModel));
+                return NotFound();
             }
 
-            return BadRequest(ModelState);
+            return Ok(mapper.Map<WalkDto>(walkDomainModel));
         }
 
         // Delete Walk By Id
