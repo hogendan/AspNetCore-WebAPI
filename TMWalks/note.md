@@ -199,3 +199,63 @@ DomainModel と DTO のマッピングをしてくれるライブラリ
 2. VS Code の TERMINAL から以下のコマンドを実行する
    1. `dotnet ef migrations add "Seeding data for Difficulties and Regions"`
    2. `otnet ef database update`
+
+## Model Validation と Customer Validation
+
+1. ModelクラスにValidationアノテーションをつける
+
+``` c#
+public class AddRegionRequestDto
+{
+    [Required]
+    [MinLength(3, ErrorMessage = "Code has to be a minimum of 3 characters")]
+    [MaxLength(3, ErrorMessage = "Code has to be a maxmum of 3 characters")]
+    public string Code { get; set; }
+    [Required]
+    [MaxLength(100, ErrorMessage = "Name has to be a maxmum of 100 characters")]
+    public string Name { get; set; }
+    public string? RegionImageUrl { get; set; }
+}
+```
+
+2. ActionメソッドでValidate実行
+
+``` c#
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] AddRegionRequestDto addRegionRequestDto)
+    {
+      if (ModelState.IsValid) {
+        // 省略
+      }
+      return BadRequest(ModelState);
+    }
+
+```
+
+3. Action共通でValidationをさせるために、CustomValidationクラスを作成
+
+``` c#
+public class ValidateModelAttribute : ActionFilterAttribute
+{
+    public override void OnActionExecuting(ActionExecutingContext context)
+    {
+        if (!context.ModelState.IsValid) 
+        {
+            context.Result = new BadRequestResult();
+        }
+    }
+}
+```
+
+4. 作成したValidateModelを使用するために、Actionメソッドで指定して、Validate処理を削除
+
+``` c#
+    [HttpPost]
+    [ValidateModel]
+    public async Task<IActionResult> Create([FromBody] AddRegionRequestDto addRegionRequestDto)
+    {
+        // ModelState.IsValid を削除
+
+        // 省略 
+    }
+```
