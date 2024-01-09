@@ -56,16 +56,21 @@ public class RegionsController : ControllerBase
     // POST: https://localhost:portnumber/api/regions
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] AddRegionRequestDto addRegionRequestDto) {
-        // Map or Convert DTO to Domain Model
-        var regionDomainModel = mapper.Map<Region>(addRegionRequestDto);
+        if (ModelState.IsValid) {
+            // Map or Convert DTO to Domain Model
+            var regionDomainModel = mapper.Map<Region>(addRegionRequestDto);
 
-        // Use Domain Model to create Region
-        regionDomainModel = await regionRepository.CreateAsync(regionDomainModel);
+            // Use Domain Model to create Region
+            regionDomainModel = await regionRepository.CreateAsync(regionDomainModel);
 
-        // Map Domain model back to DTO
-        var regionDto = mapper.Map<RegionDto>(regionDomainModel);
+            // Map Domain model back to DTO
+            var regionDto = mapper.Map<RegionDto>(regionDomainModel);
 
-        return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, regionDto);
+            return CreatedAtAction(nameof(GetById), new { id = regionDto.Id }, regionDto);
+        } else {
+            return BadRequest(ModelState);
+        }
+        
     }
 
     // Update region
