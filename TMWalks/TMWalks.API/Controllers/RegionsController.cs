@@ -1,5 +1,6 @@
 ﻿using System.Net.Sockets;
 using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Migrations.Operations;
@@ -9,6 +10,7 @@ namespace TMWalks.API;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class RegionsController : ControllerBase
 {
     private readonly TMWalksDbContext dbContext;
