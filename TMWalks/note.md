@@ -666,3 +666,42 @@ public class LoginRequestDto
     public string Password { get; set; }
 }
 ```
+
+## JWT Token の生成
+
+``` c# Repository (Interface は省略)
+public class TokeRepository : ITokenRepository
+{
+    private readonly IConfiguration configuration;
+
+    public TokeRepository(IConfiguration configuration)
+    {
+        this.configuration = configuration;
+    }
+    public string CreateJWTToken(IdentityUser user, List<string> roles)
+    {
+        // Create claims (Token を作るために必要)
+        var claims = new List<Claim>();
+
+        claims.Add(new Claim(ClaimTypes.Email, user.Email));
+
+        foreach (var role in roles)
+        {
+            claims.Add(new Claim(ClaimTypes.Role, role));
+        }
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["Jwt:Key"]));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var token = new JwtSecurityToken(
+            configuration["Jwt:Issuer"],
+            configuration["Jwt:Audience"],
+            claims,
+            expires: DateTime.Now.AddMinutes(15),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+}
+```
