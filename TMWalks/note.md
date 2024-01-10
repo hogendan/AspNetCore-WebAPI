@@ -705,3 +705,57 @@ public class TokeRepository : ITokenRepository
     }
 }
 ```
+
+## TokenRepository を Inject して、Token を生成する (Controller側の呼び出し部分)
+
+Inject を追記
+
+``` c# Program.cs
+  builder.Services.AddScoped<ITokenRepository, TokeRepository>();
+```
+
+Controller から Repository 呼び出し
+
+``` c# AuthController.cs
+    // POST: /api/Auth/Login
+    [HttpPost]
+    [Route("Login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
+    {
+        var user = await userManager.FindByEmailAsync(loginRequestDto.Username);
+
+        if (user != null)
+        {
+            var checkPasswordResult = await userManager.CheckPasswordAsync(user, loginRequestDto.Password);
+            if (checkPasswordResult)
+            {
+                // Get Roles for this user
+                var roles = await userManager.GetRolesAsync(user);
+                
+                if (roles != null)
+                {
+                    // Create Token
+                    var jwtToken = tokenRepository.CreateJWTToken(user, roles.ToList());
+                    
+                    var response = new LoginResponseDto
+                    {
+                        JwtToken = jwtToken
+                    };
+
+                    return Ok(response);
+                }
+            }
+        }
+
+        return BadRequest("Username or password incorrect");
+    }
+```
+
+Postman を使う時の token 指定方法
+
+1. API URL 指定: e.g. https://localhost:7017/api/Regions
+2. Headers タブ
+3. KEY欄に `Authorization` を追記
+4. VALUE欄に `Bearer [token]` を追記
+   1. token は 上述のコード `new JwtSecurityTokenHandler().WriteToken(token)` で生成した値を入力する
+
