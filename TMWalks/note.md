@@ -79,6 +79,8 @@ Package manager コンソールから以下を実行する
 
 1. Add-Migration "Name Of Migration"
    1. ex: Add-Migration "Initial Migration"
+   2. 複数のDbContextがある場合は、-Context パラメータで明示的にDbContextを指定する必要がある
+      1. ex: Add-Migration "Initial Migration" -Context "TMWalkAuthDbContext"
 2. Update-Database
 
 上記は VS Code ではできなかったので、以下のコマンドで実行する
@@ -90,6 +92,8 @@ Package manager コンソールから以下を実行する
 3. cd TMWalks/TMWalk.API
    1. プロジェクトファイルがあるフォルダに移動する
 4. dotnet ef migrations add "Initial Migration"
+   1. 複数DbContextがある場合は以下のように -Context を使用して明示的に指定する。
+      1. dotnet ef migrations add "Creating Auth Database" -c "TMWalksAuthDbContext"
 5. dotnet ef database update
    1. ここで色々エラーが出て1つずつ潰していった
       1. ConnectionString を以下のように変更して解決
@@ -499,4 +503,40 @@ public TMWalksDbContext(DbContextOptions<TMWalksDbContext> dbContextOptions) : b
 
 }
 
+```
+
+## EF Core Migration To Create Identity Database
+
+1. Auth用DbContextクラスで OnModelCreating を Override する
+   1. IdentityRole を追加
+   2. Nuget でインストールした Microsoft.AspNetCore.Identity にある
+2. Migration 実行
+   1. `dotnet ef migrations add "Creating Auth Database" -c "TMWalksAuthDbContext"`
+   2. `dotnet ef database update -c "TMWalksAuthDbContext"`
+
+``` c# TMWalksAuthDbContext.cs
+    protected override void OnModelCreating(ModelBuilder builder)
+    {
+        base.OnModelCreating(builder);
+
+        var readerRoleId = "4a947f13-a49d-4882-bec9-e6c700ddf326";
+        var writerRoleId = "4420a419-4ac4-4bde-a0e5-97dc4153812f";
+
+        var roles = new List<IdentityRole> {
+            new IdentityRole {
+                Id = readerRoleId,
+                ConcurrencyStamp = readerRoleId,
+                Name = "Reader",
+                NormalizedName = "Reader".ToUpper()
+            },
+            new IdentityRole {
+                Id = writerRoleId,
+                ConcurrencyStamp = writerRoleId,
+                Name = "writer",
+                NormalizedName = "writer".ToUpper()
+            },
+        };
+
+        builder.Entity<IdentityRole>().HasData(roles);
+    }
 ```
