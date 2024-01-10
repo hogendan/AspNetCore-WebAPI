@@ -777,3 +777,38 @@ Contollerクラスに対して設定していた Authorize 属性を Action単�
     {
     }
 ```
+
+## Swagger に Authorization を追加する
+
+Program.cs の `builder.Services.AddSwaggerGen` を以下のように変更する。
+
+``` c# Program.cs
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "TM Walks API", Version = "v1" });
+    options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new Microsoft.OpenApi.Models.OpenApiSecurityScheme {
+        Name = "Authorization",
+        In = ParameterLocation.Header,
+        Type = SecuritySchemeType.ApiKey,
+        Scheme = JwtBearerDefaults.AuthenticationScheme
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference {
+                    Type = ReferenceType.SecurityScheme,
+                    Id = JwtBearerDefaults.AuthenticationScheme
+                },
+                Scheme = "Oauth2",
+                Name = JwtBearerDefaults.AuthenticationScheme,
+                In = ParameterLocation.Header
+            },
+            new List<string>()
+        }
+    });
+});
+```
+
+Debug 実行時に起動した Swagger の右上に `Authorization`ボタンがあり、Value欄に以下を入力する。(Postmanと同じ)
+`Bearer [token]`
