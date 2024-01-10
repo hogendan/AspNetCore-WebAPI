@@ -560,3 +560,69 @@ builder.Services.Configure<IdentityOptions>(options =>
     options.Password.RequiredUniqueChars = 1;
 });
 ```
+
+## Identity の Controller 側実装
+
+登録リクエスト用DTO
+
+``` c# Dto
+public class RegisterRequestDto
+{
+    [Required]
+    [DataType(DataType.EmailAddress)]
+    public string Username { get; set; }
+    [Required]
+    [DataType(DataType.Password)]
+    public string Password { get; set; }
+
+    public string[] Roles { get; set; }
+}
+```
+
+Controller側ポイント
+
+- UserManager を Inject する
+- UserManager を使用して、ユーザー作成・ユーザーへのRoleの割当てを行う
+
+``` c# Controller
+[Route("api/[controller]")]
+[ApiController]
+public class AuthController : ControllerBase
+{
+    private readonly UserManager<IdentityUser> userManager;
+
+    public AuthController(UserManager<IdentityUser> userManager)
+    {
+        this.userManager = userManager;
+    }
+
+    // POST: /api/Auth/Register
+    [HttpPost]
+    [Route("Register")]
+    public async Task<IActionResult> Register([FromBody] RegisterRequestDto registerRequestDto)
+    {
+        var identityUser = new IdentityUser
+        {
+            UserName = registerRequestDto.Username,
+            Email = registerRequestDto.Username
+        };
+
+        var identityResult = await userManager.CreateAsync(identityUser, registerRequestDto.Password);
+
+        if (identityResult.Succeeded)
+        {
+            // Add roles to this User
+            if (registerRequestDto.Roles != null && registerRequestDto.Roles.Any())
+            {
+                identityResult = await userManager.AddToRolesAsync(identityUser, registerRequestDto.Roles);
+                if (identityResult.Succeeded)
+                {
+                    return Ok("User was registered! Please login.");
+                }
+            }
+        }
+
+        return BadRequest("Something went wrong");
+    }
+}
+```
