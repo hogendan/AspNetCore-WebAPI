@@ -82,6 +82,7 @@ Package manager コンソールから以下を実行する
    2. 複数のDbContextがある場合は、-Context パラメータで明示的にDbContextを指定する必要がある
       1. ex: Add-Migration "Initial Migration" -Context "TMWalkAuthDbContext"
 2. Update-Database
+   1. こちらも複数のDbContextがある場合は、-Context で明示的に指定する必要がある。
 
 上記は VS Code ではできなかったので、以下のコマンドで実行する
 [参考](https://learn.microsoft.com/en-us/ef/core/managing-schemas/migrations/?tabs=dotnet-core-cli)
@@ -92,7 +93,7 @@ Package manager コンソールから以下を実行する
 3. cd TMWalks/TMWalk.API
    1. プロジェクトファイルがあるフォルダに移動する
 4. dotnet ef migrations add "Initial Migration"
-   1. 複数DbContextがある場合は以下のように -Context を使用して明示的に指定する。
+   1. 複数DbContextがある場合は以下のように -c を使用して明示的に指定する。
       1. dotnet ef migrations add "Creating Auth Database" -c "TMWalksAuthDbContext"
 5. dotnet ef database update
    1. ここで色々エラーが出て1つずつ潰していった
@@ -133,7 +134,7 @@ public class RegionsController : ControllerBase
 
 Data Transfer Objects
 
-- Userd to transfer data between different layers
+- User to transfer data between different layers
 - Typically contain a subset of the properties in the domain model
 - For example transferring data over a network
 
@@ -306,7 +307,7 @@ URLパラメータからカラム名、フィルタ内容を取得する方法
     }
 ``` 
 
-## Soring
+## Sorting
 
 ``` c# Controller
     // GET Walks
