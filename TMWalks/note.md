@@ -626,3 +626,42 @@ public class AuthController : ControllerBase
     }
 }
 ```
+
+## Identity を使用した ログイン実装
+
+Controller
+
+``` c# Contoller
+    // POST: /api/Auth/Login
+    [HttpPost]
+    [Route("Login")]
+    public async Task<IActionResult> Login([FromBody] LoginRequestDto loginRequestDto)
+    {
+        var user = await userManager.FindByEmailAsync(loginRequestDto.Username);
+
+        if (user != null)
+        {
+            var checkPasswordResult = await userManager.CheckPasswordAsync(user, loginRequestDto.Password);
+            if (checkPasswordResult)
+            {
+                return Ok();
+            }
+        }
+
+        return BadRequest("Username or password incorrect");
+    }
+```
+
+DTO
+
+``` c#
+public class LoginRequestDto
+{
+    [Required]
+    [DataType(DataType.EmailAddress)]
+    public string Username { get; set; }
+    [Required]
+    [DataType(DataType.Password)]
+    public string Password { get; set; }
+}
+```
