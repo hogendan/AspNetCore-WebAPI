@@ -751,7 +751,7 @@ Controller から Repository 呼び出し
     }
 ```
 
-Postman を使う時の token 指定方法
+### Postman を使う時の token 指定方法
 
 1. API URL 指定: e.g. https://localhost:7017/api/Regions
 2. Headers タブ
@@ -759,3 +759,21 @@ Postman を使う時の token 指定方法
 4. VALUE欄に `Bearer [token]` を追記
    1. token は 上述のコード `new JwtSecurityTokenHandler().WriteToken(token)` で生成した値を入力する
 
+## Roles ベースの Authorization
+
+Contollerクラスに対して設定していた Authorize 属性を Action単位にして、それぞれに 許可する Role を指定する。
+
+``` c# RegionController.cs
+    [HttpGet]
+    [Authorize(Roles = "Reader, Writer")]
+    public async Task<IActionResult> GetAll()
+    {
+    }
+
+    [HttpPost]
+    [ValidateModel]
+    [Authorize(Roles = "Writer")]
+    public async Task<IActionResult> Create([FromBody] AddRegionRequestDto addRegionRequestDto)
+    {
+    }
+```
