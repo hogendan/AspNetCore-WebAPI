@@ -812,3 +812,38 @@ builder.Services.AddSwaggerGen(options =>
 
 Debug 実行時に起動した Swagger の右上に `Authorization`ボタンがあり、Value欄に以下を入力する。(Postmanと同じ)
 `Bearer [token]`
+
+## Image Update用 DomainModel 作成
+
+DomainModel 作成
+
+``` c# DomainModel
+public class Image
+{
+    public Guid Id { get; set; }
+
+    [NotMapped]
+    public IFormFile File { get; set; }
+
+    public string FileName { get; set; }
+    public string? FileDescription { get; set; }
+    public string FileExtension { get; set; }
+    public long FileSizeInBytes { get; set; }
+    public string FilePath { get; set; }
+}
+```
+
+DomainModel を DbContext へ追加
+
+``` c# TMWalksDbContext
+// 省略
+
+    public DbSet<Image> Images { get; set; }
+
+// 省略
+```
+
+EF Migration コマンド実行
+
+1. `dotnet ef migrations add "Adding Images Table" -c "TMWalksDbContext"`
+2. `dotnet ef database update -c "TMWalksDbContext"`
