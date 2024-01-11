@@ -418,10 +418,10 @@ URLパラメータからカラム名、フィルタ内容を取得する方法
 
 ### Nuget から JWT ライブラリをインストール
 
-`dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer`
-`dotnet add package Microsoft.IdentityModel.Tokens`
-`dotnet add package System.IdentityModel.Tokens.Jwt`
-`dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore`
+- `dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer`
+- `dotnet add package Microsoft.IdentityModel.Tokens`
+- `dotnet add package System.IdentityModel.Tokens.Jwt`
+- `dotnet add package Microsoft.AspNetCore.Identity.EntityFrameworkCore`
 
 ## Setting Up Auth Database
 
@@ -476,7 +476,7 @@ app.UseAuthorization();
 
 ```
 
-Authされていないリクエストを弾くように コントローラー修正
+Authされていないリクエストを弾くように コントローラー修正 (Authorize 属性追加)
 
 ``` c# Contoller
 [Route("api/[controller]")]
@@ -847,3 +847,82 @@ EF Migration コマンド実行
 
 1. `dotnet ef migrations add "Adding Images Table" -c "TMWalksDbContext"`
 2. `dotnet ef database update -c "TMWalksDbContext"`
+
+## Image Upload Repository 作成と呼び出し
+
+ImageRepositoryインターフェース作成
+
+``` c#
+public interface IImageRepository
+{
+    Task<Image> Upload(Image image);
+}
+```
+
+ImageRepository実装クラス
+
+- Image は ローカルフォルダ(プロジェクト内のImagesフォルダ)に保存
+- 上記の URL を生成するために、 IHttpContextAccessor を Inject
+- ローカルフォルダに保存後、DBへ保存
+  - DBへはファイルは保存しない。ローカルフォルダへのURLパスを保存する
+
+```c#
+public class LocalImageRepository : IImageRepository
+{
+    private readonly IWebHostEnvironment webHostEnvironment;
+    private readonly IHttpContextAccessor httpContextAccessor;
+    private readonly TMWalksDbContext dbContext;
+
+    public LocalImageRepository(IWebHostEnvironment webHostEnvironment,
+                                IHttpContextAccessor httpContextAccessor,
+                                TMWalksDbContext dbContext)
+    {
+        this.webHostEnvironment = webHostEnvironment;
+        this.httpContextAccessor = httpContextAccessor;
+        this.dbContext = dbContext;
+    }
+
+    public async Task<Image> Upload(Image image)
+    {
+        var localFilePath = Path.Combine(webHostEnvironment.ContentRootPath,
+                                         "Images",
+                                         $"{image.FileName}{image.FileExtension}");
+
+        // Upload Image to Local Path
+        using var stream = new FileStream(localFilePath, FileMode.Create);
+        await image.File.CopyToAsync(stream);
+
+        // https://localhosssst:1234/images/image.jpg
+
+        var urlFilePath = $"{httpContextAccessor.HttpContext.Request.Scheme}://{httpContextAccessor.HttpContext.Request.Host}{httpContextAccessor.HttpContext.Request.PathBase}/Images/{image.FileName}{image.FileExtension}";
+
+        image.FilePath = urlFilePath;
+
+        // Add Image to the Images table
+        await dbContext.AddAsync(image);
+        await dbContext.SaveChangesAsync();
+
+        return image;
+    }
+}
+```
+
+HttpContextAccessor クラスを Inject するための設定を Program.cs に追加  
+
+```c#
+builder.Services.AddHttpContextAccessor();
+```
+
+Image Upload用DTO
+
+``` c#
+public class ImageUploadRequestDto
+{
+    [Required]
+    public IFormFile File { get; set; }
+    [Required]
+    public string FileName { get; set; }
+    public string? FileDescription { get; set; }
+}
+```
+
