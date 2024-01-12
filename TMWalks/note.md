@@ -940,6 +940,8 @@ app.UseStaticFiles(new StaticFileOptions
 
 Serilog というログライブラリを使う。
 
+### コンソールにログ出力
+
 - `dotnet add package Serilog`
 - `dotnet add package Serilog.AspNetCore`
 - `dotnet add package Serilog.Sinks.Console`
@@ -999,4 +1001,21 @@ Inject
             throw;
         }
     }
+```
+
+### テキストファイルにログ出力
+
+以下のライブラリを追加
+
+- `dotnet add package dotnet add package Serilog.Sinks.File`
+- プロジェクトフォルダ直下に Logs フォルダ作成
+
+Program.cs 修正
+
+```c#
+var logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("Logs/TMWalks_Log.txt", rollingInterval: RollingInterval.Day)
+    .MinimumLevel.Information()
+    .CreateLogger();
 ```
