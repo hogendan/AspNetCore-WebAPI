@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.ApiExplorer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
@@ -25,11 +26,25 @@ builder.Logging.AddSerilog(logger);
 builder.Services.AddControllers();
 builder.Services.AddHttpContextAccessor();
 
+builder.Services.AddApiVersioning(options => 
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+});
+
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "TM Walks API", Version = "v1" });
+    // Swagger で version 指定して実行できるようにする場合は以下をコメントアウトする。(ConfigureSwaggerOptionクラスの設定とぶつかってビルドエラーになる)
+    // options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "TM Walks API", Version = "v1" });
     options.AddSecurityDefinition(JwtBearerDefaults.AuthenticationScheme, new Microsoft.OpenApi.Models.OpenApiSecurityScheme {
         Name = "Authorization",
         In = ParameterLocation.Header,
@@ -52,6 +67,8 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 
 builder.Services.AddDbContext<TMWalksDbContext>(options => 
     options.UseSqlServer(builder.Configuration.GetConnectionString("TMWalksConnectionString"))
@@ -100,11 +117,20 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
+var versionDescriptionProvider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(options =>
+    {
+        foreach (var description in versionDescriptionProvider.ApiVersionDescriptions)
+        {
+            options.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
+                description.GroupName.ToUpperInvariant());
+        }
+    });
 }
 
 app.UseMiddleware<ExceptionHandlerMiddleware>();

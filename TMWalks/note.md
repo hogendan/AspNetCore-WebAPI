@@ -1075,3 +1075,130 @@ public class ExceptionHandlerMiddleware
 ```c#
 app.UseMiddleware<ExceptionHandlerMiddleware>();
 ```
+
+## Versioning
+
+- Controller の Route に version番号を追加する。(URLにv1などをつけてアクセスできるようにする)
+- Version 毎のActionメソッドを作る。
+- ActionメソッドとVersion番号を対応させる
+- Swagger をVersion対応させるために、設定クラスを作る。-> ConfigureSwaggerOption.cs
+
+### 必要パッケージ
+
+- `dotnet add package Microsoft.AspNetCore.Mvc.Versioning`
+- `dotnet add package Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer`
+  - こちらは、Swagger対応で必要
+
+### Controller (CountryController)
+
+- Route にバージョン番号含める
+- ApiVersion に全Version指定する
+- VersionとActionメソッドを対応させる
+
+```c#
+[Route("api/v{version:apiVersion}/[controller]")]
+[ApiVersion("1.0")]
+[ApiVersion("2.0")]
+[ApiController]
+public class CountryController : ControllerBase
+{
+    [MapToApiVersion("1.0")]
+    [HttpGet]
+    public IActionResult GetV1() 
+    {
+        var dto = new CountryDtoV1 {
+            Id = 1,
+            Name = "Japan v1",
+        };
+
+        return Ok(dto);
+    }
+
+    [MapToApiVersion("2.0")]
+    [HttpGet]
+    public IActionResult GetV2() 
+    {
+        var dto = new CountryDtoV2 {
+            Id = 1,
+            CountryName = "Japan v2",
+        };
+
+        return Ok(dto);
+    }
+}
+```
+
+### Program.cs
+
+```c#
+builder.Services.AddApiVersioning(options => 
+{
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.DefaultApiVersion = new Microsoft.AspNetCore.Mvc.ApiVersion(1, 0);
+    options.ReportApiVersions = true;
+});
+```
+
+### Swagger で Version 対応させるために
+
+Swagger で実行しようとするとブラウザにエラー表示されるため、以下の対応が必要になる。
+
+- ConfigureSwaggerOptions.cs を生成して、設定を書く
+
+```c#
+public class ConfigureSwaggerOptions : IConfigureNamedOptions<SwaggerGenOptions>
+{
+    private readonly IApiVersionDescriptionProvider apiVersionDescriptionProvider;
+
+    public ConfigureSwaggerOptions(IApiVersionDescriptionProvider apiVersionDescriptionProvider)
+    {
+        this.apiVersionDescriptionProvider = apiVersionDescriptionProvider;
+    }
+    public void Configure(string? name, SwaggerGenOptions options)
+    {
+        Configure(options);
+    }
+
+    public void Configure(SwaggerGenOptions options)
+    {
+        foreach (var item in apiVersionDescriptionProvider.ApiVersionDescriptions)
+        {
+            options.SwaggerDoc(item.GroupName, CreateVersionInfo(item));
+        }
+    }
+
+    private OpenApiInfo CreateVersionInfo(ApiVersionDescription description)
+    {
+        var info = new OpenApiInfo
+        {
+            Title = "Your Versioned API",
+            Version = description.ApiVersion.ToString()
+        };
+
+        return info;
+    }
+}
+```
+
+- Program.cs を書き換える
+
+``` c#
+builder.Services.AddVersionedApiExplorer(options =>
+{
+    options.GroupNameFormat = "'v'VVV";
+    options.SubstituteApiVersionInUrl = true;
+});
+
+// 省略
+
+builder.Services.AddSwaggerGen(options =>
+{
+    // Swagger で version 指定して実行できるようにする場合は以下をコメントアウトする。(ConfigureSwaggerOptionクラスの設定とぶつかってビルドエラーになる)
+    // options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "TM Walks API", Version = "v1" });
+
+    // 省略
+});
+
+builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
+
+```
