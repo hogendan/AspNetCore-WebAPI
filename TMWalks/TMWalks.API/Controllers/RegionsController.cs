@@ -1,4 +1,5 @@
 ﻿using System.Net.Sockets;
+using System.Text.Json;
 using AutoMapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -15,25 +16,42 @@ public class RegionsController : ControllerBase
     private readonly TMWalksDbContext dbContext;
     private readonly IRegionRepository regionRepository;
     private readonly IMapper mapper;
+    private readonly ILogger<RegionsController> logger;
 
-    public RegionsController(TMWalksDbContext dbContext, IRegionRepository regionRepository, IMapper mapper)
+    public RegionsController(TMWalksDbContext dbContext,
+                             IRegionRepository regionRepository,
+                             IMapper mapper,
+                             ILogger<RegionsController> logger)
     {
         this.dbContext = dbContext;
         this.regionRepository = regionRepository;
         this.mapper = mapper;
+        this.logger = logger;
     }
 
     // GET ALL REGIONS
     // GET: https://localhost:portnumber/api/regions
     [HttpGet]
-    [Authorize(Roles = "Reader, Writer")]
+    // [Authorize(Roles = "Reader, Writer")]
     public async Task<IActionResult> GetAll()
     {
-        // Get Data From Database - Domain models
-        var regionsDomain = await regionRepository.GetAllAsync();
+        try
+        {
+            logger.LogInformation("GetAllRegions Action Method was invoked");
 
-        // Return DTOs
-        return Ok(mapper.Map<List<RegionDto>>(regionsDomain));
+            // Get Data From Database - Domain models
+            var regionsDomain = await regionRepository.GetAllAsync();
+
+            logger.LogInformation($"Finished GetAllRegions request with data: {JsonSerializer.Serialize(regionsDomain)}");
+
+            // Return DTOs
+            return Ok(mapper.Map<List<RegionDto>>(regionsDomain));
+        }
+        catch (System.Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+            throw;
+        }
     }
 
     // GET SINGLE REGION (Get Region By ID)

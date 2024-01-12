@@ -935,3 +935,68 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/Images"
 });
 ```
+
+## Logging
+
+Serilog というログライブラリを使う。
+
+- `dotnet add package Serilog`
+- `dotnet add package Serilog.AspNetCore`
+- `dotnet add package Serilog.Sinks.Console`
+
+設定と Inject を Program.cs に書く
+
+- ログをコンソールに出力
+- 最小レベルは Info
+
+```c#
+var logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .MinimumLevel.Information()
+    .CreateLogger();
+
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog(logger);
+```
+
+Controller で使用する
+
+Inject
+
+```c#
+    public RegionsController(TMWalksDbContext dbContext,
+                             IRegionRepository regionRepository,
+                             IMapper mapper,
+                             ILogger<RegionsController> logger)
+    {
+        this.dbContext = dbContext;
+        this.regionRepository = regionRepository;
+        this.mapper = mapper;
+        this.logger = logger;
+    }
+```
+
+ログ出力
+
+```c#
+    public async Task<IActionResult> GetAll()
+    {
+        try
+        {
+            logger.LogInformation("GetAllRegions Action Method was invoked");
+
+            // Get Data From Database - Domain models
+            var regionsDomain = await regionRepository.GetAllAsync();
+
+            logger.LogInformation($"Finished GetAllRegions request with data: {JsonSerializer.Serialize(regionsDomain)}");
+
+            // Return DTOs
+            return Ok(mapper.Map<List<RegionDto>>(regionsDomain));
+        }
+        catch (System.Exception ex)
+        {
+            logger.LogError(ex, ex.Message);
+            throw;
+        }
+    }
+```
