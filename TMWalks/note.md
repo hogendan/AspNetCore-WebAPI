@@ -1019,3 +1019,59 @@ var logger = new LoggerConfiguration()
     .MinimumLevel.Information()
     .CreateLogger();
 ```
+
+### Global Exception Handler (Actionメソッドに書かなくても例外をキャッチしてログ出力)
+
+例外キャッチクラス作成 ExceptionHandlerMiddleware
+
+- RequestDelegate: リクエスト処理をするためのもの
+- 上記に HttpContext を渡すことで「リクエスト処理中」を捉えることができる
+
+```c#
+public class ExceptionHandlerMiddleware
+{
+    private readonly ILogger<ExceptionHandlerMiddleware> logger;
+    private readonly RequestDelegate next;
+
+    public ExceptionHandlerMiddleware(ILogger<ExceptionHandlerMiddleware> logger, RequestDelegate next)
+    {
+        this.logger = logger;
+        // RequestDelegate は Requestプロセスの完了を表すタスクを返す。これを使って HTTP Request を処理することができる。
+        this.next = next;
+    }
+
+    public async Task InvokeAsync(HttpContext httpContext)
+    {
+        try
+        {
+            // httpContext 呼び出し中に何かあったら例外をハンドルして、ログに書く。
+            await next(httpContext);
+        }
+        catch (System.Exception ex)
+        {
+            var errorId = Guid.NewGuid();
+
+            // Log This Exception
+            logger.LogError(ex, $"{errorId} : {ex.Message}");
+
+            // Return A Custom Error Reponse
+            httpContext.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+            httpContext.Response.ContentType = "application/json";
+
+            var error =new 
+            {
+                Id = errorId,
+                ErrorMessage = "Something went wrong! We are looking into resolving this.",
+            };
+
+            await httpContext.Response.WriteAsJsonAsync(error);
+        }
+    　}
+  　}
+```
+
+上記Handlerクラスを使うために、Program.cs を修正
+
+```c#
+app.UseMiddleware<ExceptionHandlerMiddleware>();
+```
