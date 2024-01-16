@@ -1,4 +1,7 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.Text;
+using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using TMWalker.UI.Models;
 
 namespace TMWalker.UI;
 
@@ -11,9 +14,10 @@ public class RegionsController : Controller
         this.httpClientFactory = httpClientFactory;
     }
 
+    [HttpGet]
     public async Task<IActionResult> Index()
     {
-        List<RegionDto> response = new ();
+        List<RegionDto> response = new();
 
         try
         {
@@ -33,5 +37,46 @@ public class RegionsController : Controller
         }
 
         return View(response);
+    }
+
+    [HttpGet]
+    public IActionResult Add()
+    {
+        return View();
+    }
+    
+    [HttpPost]
+    public async Task<IActionResult> Add(AddRegionViewModel model)
+    {
+        var client = httpClientFactory.CreateClient();
+
+        var httpRequestMessage = new HttpRequestMessage()
+        {
+            Method = HttpMethod.Post,
+            RequestUri = new Uri("https://localhost:7017/api/regions"),
+            Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json"),
+        };
+
+        var httpResponseMessage = await client.SendAsync(httpRequestMessage);
+
+try
+{
+            httpResponseMessage.EnsureSuccessStatusCode();
+    
+}
+catch (System.Exception e)
+{
+    var hoge = await httpResponseMessage.Content.ReadAsStringAsync();
+    Console.WriteLine(e);
+    throw;
+}
+        var response = await httpResponseMessage.Content.ReadFromJsonAsync<RegionDto>();
+
+        if (response is not null)
+        {
+            return RedirectToAction("Index", "Regions");
+        }
+
+        return View();
     }
 }
