@@ -1209,7 +1209,7 @@ builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 
 ```
 
-## Consuming Our Web API
+## Consuming Our Web API - GET
 
 作成したWebAPIを呼び出すための ASP.NET MVC プロジェクトを作成する
 
@@ -1288,4 +1288,37 @@ public class RegionsController : Controller
         }
     </tbody>
 </table>
+```
+
+## Consuming Our Web API - POST
+
+- GET と同じく HttpClient を使用する。メソッドは、SendAsync
+- parameter に HttpReqeustMessage クラスを使用する。
+  - Content プロパティに、POSTするオブジェクト(API がパラメータで受けるDTOと同じプロパティを持つこと)を設定する。
+
+``` c#
+    [HttpPost]
+    public async Task<IActionResult> Add(AddRegionViewModel model)
+    {
+        var client = httpClientFactory.CreateClient();
+
+        var httpRequestMessage = new HttpRequestMessage()
+        {
+            Method = HttpMethod.Post,
+            RequestUri = new Uri("https://localhost:7017/api/regions"),
+            Content = new StringContent(JsonSerializer.Serialize(model), Encoding.UTF8, "application/json"),
+        };
+
+        var httpResponseMessage = await client.SendAsync(httpRequestMessage);
+        httpResponseMessage.EnsureSuccessStatusCode();
+
+        var response = await httpResponseMessage.Content.ReadFromJsonAsync<RegionDto>();
+
+        if (response is not null)
+        {
+            return RedirectToAction("Index", "Regions");
+        }
+
+        return View();
+    }
 ```
