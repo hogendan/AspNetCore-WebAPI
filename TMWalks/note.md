@@ -6,6 +6,12 @@
 
 [チュートリアル](https://learn.microsoft.com/ja-jp/aspnet/core/tutorials/first-web-api?view=aspnetcore-7.0&tabs=visual-studio-code)
 
+### Project を作る
+
+`dotnet new webapi -o TodoApi -f net7.0`
+`cd TodoApi`
+`dotnet add package Microsoft.EntityFrameworkCore.InMemory -v 7.0.0`
+
 ### Solution を作る
 
 `dotnet new sln`
@@ -1201,4 +1207,85 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.ConfigureOptions<ConfigureSwaggerOptions>();
 
+```
+
+## Consuming Our Web API
+
+作成したWebAPIを呼び出すための ASP.NET MVC プロジェクトを作成する
+
+- `dotnet new mvc -o TMWalker.UI`
+- `dotnet sln add TMWalker.UI/TMWalker.UI.csproj`
+
+UI Controller を作成し、API呼び出しをする
+
+- TMWalks.API の URL は以下を見る。
+  - `TMWalks.API/Properties/launchSettings.json #applicationUrl`
+- IHttpClientFactory を使用して、APIにアクセスする
+- API の戻り値を json で受け取って DTO へ変換して cshtml で使用する
+
+``` c#
+// Program.cs
+builder.Services.AddHttpClient();
+```
+
+``` c#
+public class RegionsController : Controller
+{
+    private readonly IHttpClientFactory httpClientFactory;
+
+    public RegionsController(IHttpClientFactory httpClientFactory)
+    {
+        this.httpClientFactory = httpClientFactory;
+    }
+
+    public async Task<IActionResult> Index()
+    {
+        List<RegionDto> response = new ();
+
+        try
+        {
+            // Get All Regions from Web API
+            var client = httpClientFactory.CreateClient();
+
+            var httpResponseMessage = await client.GetAsync("https://localhost:7017/api/regions");
+
+            // HTTP response が false の時に例外発生する
+            httpResponseMessage.EnsureSuccessStatusCode();
+
+            response.AddRange(await httpResponseMessage.Content.ReadFromJsonAsync<IEnumerable<RegionDto>>());
+        }
+        catch (System.Exception)
+        {
+            // Log the exceptions
+        }
+
+        return View(response);
+    }
+}
+```
+
+``` html
+@model IEnumerable<TMWalker.UI.RegionDto>
+
+<h1 class="mt-3">Regions</h1>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Id</th>
+            <th>Code</th>
+            <th>Name</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var region in Model)
+        {
+            <tr>
+                <td>@region.Id</td>
+                <td>@region.Code</td>
+                <td>@region.Name</td>
+            </tr>
+        }
+    </tbody>
+</table>
 ```
