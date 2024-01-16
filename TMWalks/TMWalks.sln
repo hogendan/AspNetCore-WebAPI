@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMWalks.API", "TMWalks.API\TMWalks.API.csproj", "{1A4D10B0-5BA0-460C-BDEF-89537C1B17BC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TMWalker.UI", "TMWalker.UI\TMWalker.UI.csproj", "{4090D4BD-8955-404E-B049-5320C6E4102B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{1A4D10B0-5BA0-460C-BDEF-89537C1B17BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A4D10B0-5BA0-460C-BDEF-89537C1B17BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A4D10B0-5BA0-460C-BDEF-89537C1B17BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4090D4BD-8955-404E-B049-5320C6E4102B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4090D4BD-8955-404E-B049-5320C6E4102B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4090D4BD-8955-404E-B049-5320C6E4102B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4090D4BD-8955-404E-B049-5320C6E4102B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
