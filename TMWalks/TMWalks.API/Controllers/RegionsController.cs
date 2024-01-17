@@ -58,7 +58,7 @@ public class RegionsController : ControllerBase
     // GET: https://localhost:portnumber/api/regions/{id}
     [HttpGet]
     [Route("{id:Guid}")]
-    [Authorize(Roles = "Reader, Writer")]
+    // [Authorize(Roles = "Reader, Writer")]
     public async Task<IActionResult> GetById([FromRoute] Guid id)
     {
         // Find は Primary Key を探す
@@ -100,7 +100,7 @@ public class RegionsController : ControllerBase
     [HttpPut]
     [Route("{id:Guid}")]
     [ValidateModel]
-    [Authorize(Roles = "Writer")]
+    // [Authorize(Roles = "Writer")]
     public async Task<IActionResult> Update([FromRoute] Guid id, [FromBody] UpdateRetionRequesstDto updateRetionRequesstDto)
     {
         // Map DTO to Domain Model

@@ -1322,3 +1322,105 @@ public class RegionsController : Controller
         return View();
     }
 ```
+
+Add.cshtml
+
+``` html
+<form method="post">
+    <div class="mt-3">
+        <label class="form-label">Code</label>
+        <input type="text" class="form-control" asp-for="Code" />
+    </div>    
+    <div class="mt-3">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" asp-for="Name" />
+    </div>    
+    <div class="mt-3">
+        <label class="form-label">Image URL</label>
+        <input type="text" class="form-control" asp-for="RegionImageUrl" />
+    </div>    
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>
+```
+
+## Consuming Our Web API - PUT
+
+- 一覧画面(Index.cshtml)から個別の編集画面に遷移するときに、Actionメソッドに Id を渡す方法は、以下。
+  - `asp-controller="regoins" asp-action="Edit" asp-route-id="@region.Id"`
+- PUT API は パラメータとして ID は URLから取り、変更内容は Body から取るため、HttpRequestMessage にそのように設定する
+- UI Edit Actionメソッドはパラメータとして ViewModel ではなく RegionDtoを使用している。
+  - これは Edit用 ViewModel を作っても問題ないと思う。
+- Edit.cshtml は RegionDto を @model で使用し、バインド(asp-for) している。
+
+``` c#
+    [HttpGet]
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var client = httpClientFactory.CreateClient();
+
+        var response = await client.GetFromJsonAsync<RegionDto>($"https://localhost:7017/api/regions/{id}");
+
+        if (response is not null)
+        {
+            return View(response);
+        }
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Edit(RegionDto request)
+    {
+        var client = httpClientFactory.CreateClient();
+
+        var httpRequestMessage = new HttpRequestMessage()
+        {
+            Method = HttpMethod.Put,
+            RequestUri = new Uri($"https://localhost:7017/api/regions/{request.Id}"),
+            Content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"),
+        };
+
+        var httpResponseMessage = await client.SendAsync(httpRequestMessage);
+
+        httpResponseMessage.EnsureSuccessStatusCode();
+
+        var response = await httpResponseMessage.Content.ReadFromJsonAsync<RegionDto>();
+
+        if (response is not null) 
+        {
+            return RedirectToAction("Index", "Regions");
+        }
+
+        return View();
+    }
+```
+
+``` html
+@model TMWalker.UI.RegionDto
+
+<form method="post">
+    <div class="mt-3">
+        <label class="form-label">Id</label>
+        <input type="text" class="form-control" asp-for="Id" readonly />
+    </div>    
+    <div class="mt-3">
+        <label class="form-label">Code</label>
+        <input type="text" class="form-control" asp-for="Code" />
+    </div>    
+    <div class="mt-3">
+        <label class="form-label">Name</label>
+        <input type="text" class="form-control" asp-for="Name" />
+    </div>    
+    <div class="mt-3">
+        <label class="form-label">Image URL</label>
+        <input type="text" class="form-control" asp-for="RegionImageUrl" />
+    </div>    
+
+    <div class="mt-3">
+        <button type="submit" class="btn btn-primary">Save</button>
+    </div>
+</form>
+```
