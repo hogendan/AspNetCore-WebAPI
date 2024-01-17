@@ -1424,3 +1424,40 @@ Add.cshtml
     </div>
 </form>
 ```
+
+## Consuming Our Web API - DELETE
+
+- Edit画面に削除ボタン追加
+- 削除ボタンは、asp-controller, asp-action に Delete を指定する
+- DeleteAsync メソッドでAPIを呼び出す
+
+``` html
+    <div class="mt-3 d-flex justify-content-between">
+        <button type="submit" class="btn btn-primary">Save</button>
+        <button type="submit" asp-controller="Regions"
+            asp-action="Delete"
+            class="btn btn-danger">Delete</button>
+    </div>
+```
+
+``` c#
+    [HttpPost]
+    public async Task<IActionResult> Delete(RegionDto request)
+    {
+        try
+        {
+            var client = httpClientFactory.CreateClient();
+
+            var httpResponseMessage = await client.DeleteAsync($"https://localhost:7017/api/regions/{request.Id}");
+
+            httpResponseMessage.EnsureSuccessStatusCode();
+
+            return RedirectToAction("Index", "Regions");
+        }
+        catch (System.Exception ex)
+        {
+            // Console
+        }
+        return View();
+    }
+```

@@ -107,11 +107,31 @@ public class RegionsController : Controller
 
         var response = await httpResponseMessage.Content.ReadFromJsonAsync<RegionDto>();
 
-        if (response is not null) 
+        if (response is not null)
         {
             return RedirectToAction("Index", "Regions");
         }
 
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Delete(RegionDto request)
+    {
+        try
+        {
+            var client = httpClientFactory.CreateClient();
+
+            var httpResponseMessage = await client.DeleteAsync($"https://localhost:7017/api/regions/{request.Id}");
+
+            httpResponseMessage.EnsureSuccessStatusCode();
+
+            return RedirectToAction("Index", "Regions");
+        }
+        catch (System.Exception ex)
+        {
+            // Console
+        }
         return View();
     }
 }

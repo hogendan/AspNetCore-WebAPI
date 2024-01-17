@@ -123,7 +123,7 @@ public class RegionsController : ControllerBase
     // DELETE: https://localhost:portnumber/api/region/{id}
     [HttpDelete]
     [Route("{id:Guid}")]
-    [Authorize(Roles = "Writer")]
+    // [Authorize(Roles = "Writer")]
     public async Task<IActionResult> Delete([FromRoute] Guid id)
     {
         var regionDomainModel = await regionRepository.DeleteAsync(id);
