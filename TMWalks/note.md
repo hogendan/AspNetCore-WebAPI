@@ -1461,3 +1461,46 @@ Add.cshtml
         return View();
     }
 ```
+
+## Deplying ASP.NET Web API To Azure
+
+1. Resource Group 作成
+2. App Services 作成
+   1. Name: app-nzwalks-eastus-dev-001
+   2. Publish: Code
+   3. Runtime: .Net7
+3. SQL databases 作成
+   1. Server: Create New
+      1. Authentication method: Use SQL authentication
+4. SQL server ネットワーク設定
+   1. SQL servers -> sqlserver-nzwalks-eastus-dev-001
+   2. Networking
+      1. Public network acccses: Selected networks
+      2. Start IPv4 address, End IPv4 address を入力
+         1. 動画では、SQL Management Studio で Azure の SQL server へのログイン画面を操作して値を確認していた。モザイクがかかっていたが。
+            1. Server nameは、sqlserver-nzwalks-eastus-dev-001.database.windows.net
+            2. Login, Password はAzureで作成時の設定値
+      3. Exceptions
+         1. Allow Azure services and resources to access this server にチェック
+      4. SSMSからAzureで作成したSQL server　へ接続できることを確認
+5. Visual Studio
+   1. Account Settings
+      1. Add
+      2. Azure アカウント追加
+   2. Publish Profile 作成
+      1. Target
+      2. Azure
+      3. Azure App Service (Windows)
+      4. rg-nzwalks-eastus-dev-001 - app-nzwalks-eastus-dev-001 を選択
+      5. API Management はスキップ
+      6. Deployment type は Publish を選択
+      7. 完了
+      8. NZWalks.API -> Properties -> PublishProfiles に作成したファイルが追加される
+   3. Publish 実行
+      1. DBをAzure SQLに向ける設定をする
+      2. Publish ボタン押下
+         1. ブラウザでエラー DB関係的なことを言っていた。
+         2. エラー解消のための説明は、動画参照
+   4. App ServiceのAPIにアクセス
+      1. Postmanを使って確認
+      2. JWT Token がないと怒られるので、Token を 取得して、Headerに設定して、アクセス
