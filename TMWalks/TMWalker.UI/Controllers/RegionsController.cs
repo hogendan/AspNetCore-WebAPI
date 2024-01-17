@@ -44,7 +44,7 @@ public class RegionsController : Controller
     {
         return View();
     }
-    
+
     [HttpPost]
     public async Task<IActionResult> Add(AddRegionViewModel model)
     {
@@ -59,20 +59,55 @@ public class RegionsController : Controller
 
         var httpResponseMessage = await client.SendAsync(httpRequestMessage);
 
-try
-{
-            httpResponseMessage.EnsureSuccessStatusCode();
-    
-}
-catch (System.Exception e)
-{
-    var hoge = await httpResponseMessage.Content.ReadAsStringAsync();
-    Console.WriteLine(e);
-    throw;
-}
+        httpResponseMessage.EnsureSuccessStatusCode();
+
+        // API が失敗した時にAPI側が設定するエラーメッセージを取得したい場合は、以下で取得できる。
+        // var hoge = await httpResponseMessage.Content.ReadAsStringAsync();
+
         var response = await httpResponseMessage.Content.ReadFromJsonAsync<RegionDto>();
 
         if (response is not null)
+        {
+            return RedirectToAction("Index", "Regions");
+        }
+
+        return View();
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Edit(Guid id)
+    {
+        var client = httpClientFactory.CreateClient();
+
+        var response = await client.GetFromJsonAsync<RegionDto>($"https://localhost:7017/api/regions/{id}");
+
+        if (response is not null)
+        {
+            return View(response);
+        }
+
+        return View();
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Edit(RegionDto request)
+    {
+        var client = httpClientFactory.CreateClient();
+
+        var httpRequestMessage = new HttpRequestMessage()
+        {
+            Method = HttpMethod.Put,
+            RequestUri = new Uri($"https://localhost:7017/api/regions/{request.Id}"),
+            Content = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json"),
+        };
+
+        var httpResponseMessage = await client.SendAsync(httpRequestMessage);
+
+        httpResponseMessage.EnsureSuccessStatusCode();
+
+        var response = await httpResponseMessage.Content.ReadFromJsonAsync<RegionDto>();
+
+        if (response is not null) 
         {
             return RedirectToAction("Index", "Regions");
         }
