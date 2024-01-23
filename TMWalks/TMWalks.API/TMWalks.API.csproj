@@ -33,4 +33,8 @@
     <Folder Include="Logs/" />
   </ItemGroup>
 
+<ItemGroup>
+  <Content Include="Images/**" CopyToPublishDirectory="PreserveNewest" />
+</ItemGroup>
+
 </Project>
