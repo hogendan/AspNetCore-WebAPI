@@ -27,6 +27,10 @@
 - `dotnet run --launch-profile https`
 - 上記を実行後に、<https://localhost:portnumber/swagger>
 
+もしくは、以下でもいける
+
+- vs code -> Run -> Start Debugging -> プロジェクト選択
+
 ---
 
 ## Swagger
